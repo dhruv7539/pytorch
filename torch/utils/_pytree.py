@@ -15,6 +15,8 @@ This pytree implementation is not very performant due to Python overhead
 To improve the performance we can move parts of the implementation to C++.
 """
 
+from __future__ import annotations
+
 import dataclasses
 import functools
 import importlib
@@ -39,7 +41,6 @@ from typing import (
     TYPE_CHECKING,
     TypeAlias,
     TypeVar,
-    Union,
 )
 from typing_extensions import deprecated, NamedTuple, Self, TypeIs
 
@@ -480,12 +481,12 @@ class ConstantNode(Generic[T]):
     value: T
 
 
-def _is_constant_holder(spec: "TreeSpec") -> bool:
+def _is_constant_holder(spec: TreeSpec) -> bool:
     """Checks if the spec is from a pytree registered with register_constant"""
     return isinstance(spec._context, ConstantNode)
 
 
-def _retrieve_constant(spec: "TreeSpec") -> Any:
+def _retrieve_constant(spec: TreeSpec) -> Any:
     """Given a spec from a pytree registered with register_constant, retrieves the constant"""
     if not _is_constant_holder(spec):
         raise AssertionError("spec does not correspond to a registered constant pytree")
@@ -1385,7 +1386,7 @@ def treespec_dict(
 
 def _is_pytreespec_instance(
     obj: Any,
-) -> TypeIs[Union[TreeSpec, "cxx_pytree.PyTreeSpec"]]:
+) -> TypeIs[TreeSpec | cxx_pytree.PyTreeSpec]:
     if isinstance(obj, TreeSpec):
         return True
     if "torch.utils._cxx_pytree" in sys.modules:
@@ -1407,7 +1408,7 @@ def _is_pytreespec_instance(
 
 
 def _ensure_python_treespec_instance(
-    treespec: Union[TreeSpec, "cxx_pytree.PyTreeSpec"],
+    treespec: TreeSpec | cxx_pytree.PyTreeSpec,
 ) -> TreeSpec:
     if isinstance(treespec, TreeSpec):
         return treespec
@@ -1926,7 +1927,7 @@ class _TreeSpecSchema:
 
     type: str | None
     context: DumpableContext
-    children_spec: list["_TreeSpecSchema"]
+    children_spec: list[_TreeSpecSchema]
 
 
 class _ProtocolFn(NamedTuple):
